@@ -1,7 +1,7 @@
 import through, { TransformCallback } from 'through2';
 import VinylFile from 'vinyl';
 import path from 'path';
-import replaceStream from 'stream-replace';
+import replaceStream from 'replacestream';
 
 const PLUGIN_NAME = 'gulp-rewrite-imports';
 
@@ -39,7 +39,7 @@ function resolveRelativePath(inPath: string, relative: boolean, file: VinylFile)
 
 function handleStream(options: Options, file: VinylFile, stream: NodeJS.ReadableStream, cb: TransformCallback) {
     file.contents = stream
-        .pipe(replaceStream(createRegex(), function (original, match) {
+        .pipe(replaceStream(createRegex(), function (original, ...match) {
             const rewrittenImport = rewriteRegexMatch(options, file, [original].concat(match));
             if (rewrittenImport) {
                 return rewrittenImport;
@@ -86,8 +86,7 @@ export = function (options: Options) {
             return cb(null, file);
         }
         if (file.isStream()) {
-            handleStream(options, file, file.contents, cb);
-            return;
+            return handleStream(options, file, file.contents, cb);
         }
         let inContent = String(file.contents);
         let outContent = inContent;
@@ -102,6 +101,6 @@ export = function (options: Options) {
         }
 
         file.contents = Buffer.from(outContent);
-        cb(null, file);
+        return cb(null, file);
     });
 }
