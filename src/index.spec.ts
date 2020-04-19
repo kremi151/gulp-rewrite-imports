@@ -47,6 +47,31 @@ const instance = new Something();
 `);
     });
 
+    it('should not support streams by default', async () => {
+        const fakeFile = new VinylFile({
+            contents: new MemoryStreams.ReadableStream(`does not matter`),
+        });
+        const transform = rewriter({
+            mappings: {
+                'nowhere': 'somewhere',
+            },
+        });
+        expect(() => transform.write(fakeFile)).to.throw('Stream support is currently experimental and therefore by default disabled. To enable it, set experimentalEnableStreams option to true.');
+    });
+
+    it('should support streams by when setting experimental flag', async () => {
+        const fakeFile = new VinylFile({
+            contents: new MemoryStreams.ReadableStream(`does not matter`),
+        });
+        const transform = rewriter({
+            mappings: {
+                'nowhere': 'somewhere',
+            },
+            experimentalEnableStreams: true,
+        });
+        expect(() => transform.write(fakeFile)).to.not.throw('Stream support is currently experimental and therefore by default disabled. To enable it, set experimentalEnableStreams option to true.');
+    });
+
     /*it('should replace streams correctly', async () => {
         const fakeFile = new VinylFile({
             contents: new MemoryStreams.ReadableStream(`import { Something } from 'nowhere';

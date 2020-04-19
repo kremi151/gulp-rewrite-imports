@@ -2,6 +2,7 @@ import through, { TransformCallback } from 'through2';
 import VinylFile from 'vinyl';
 import path from 'path';
 import replaceStream from 'replacestream';
+import PluginError from 'plugin-error';
 
 const PLUGIN_NAME = 'gulp-rewrite-imports';
 
@@ -12,6 +13,7 @@ type TargetPath = string | {
 
 interface Options {
     mappings: { [module: string]: TargetPath };
+    experimentalEnableStreams?: boolean;
 }
 
 type ImportWriter = (module: string, imports?: string) => string;
@@ -38,6 +40,10 @@ function resolveRelativePath(inPath: string, relative: boolean, file: VinylFile)
 }
 
 function handleStream(options: Options, file: VinylFile, stream: NodeJS.ReadableStream, cb: TransformCallback) {
+    if (!options.experimentalEnableStreams) {
+        cb(new PluginError(PLUGIN_NAME, 'Stream support is currently experimental and therefore by default disabled. To enable it, set experimentalEnableStreams option to true.'));
+        return;
+    }
     file.contents = stream
         .pipe(replaceStream(createRegex(), function (original, ...match) {
             const rewrittenImport = rewriteRegexMatch(options, file, [original].concat(match));
