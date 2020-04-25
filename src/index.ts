@@ -19,15 +19,31 @@ interface Options {
 type ImportWriter = (module: string, imports?: string) => string;
 
 function createRegex() {
-    return /(?:import(.*?)from ?(?:(?:"([^"]+)")|(?:'([^']+)'));?)|(?:require\((?:(?:"([^"]+)")|(?:'([^']+)'))\))/g;
+    return /(?:import(.*?)from ?(?:(?:"([^"]+)")|(?:'([^']+)'));?)|(?:require\((?:(?:"([^"]+)")|(?:'([^']+)'))\))|(?:import\((?:(?:"([^"]+)")|(?:'([^']+)'))\))/g;
 }
 
-function pipeRequire(module: string): string {
+function pipeRequireSQ(module: string): string {
     return `require('${module}')`;
 }
 
-function pipeImport(module: string, imports: string | undefined) {
+function pipeRequireDQ(module: string): string {
+    return `require("${module}")`;
+}
+
+function pipeImportSQ(module: string): string {
+    return `import('${module}')`;
+}
+
+function pipeImportDQ(module: string): string {
+    return `import("${module}")`;
+}
+
+function pipeImportFromSQ(module: string, imports: string | undefined) {
     return `import ${imports} from '${module}';`;
+}
+
+function pipeImportFromDQ(module: string, imports: string | undefined) {
+    return `import ${imports} from "${module}";`;
 }
 
 function resolveRelativePath(inPath: string, relative: boolean, file: VinylFile): string {
@@ -62,14 +78,18 @@ function rewriteRegexMatch(options: Options, file: VinylFile, match: any[]): str
     let imports: string | undefined;
 
     if (match[4] || match[5]) {
-        // require
+        // require(xxx)
         srcModule = match[4] || match[5];
-        importWriter = pipeRequire;
+        importWriter = match[4] ? pipeRequireDQ : pipeRequireSQ;
     } else if (match[2] || match[3]) {
-        // import
+        // import xxx from yyy
         imports = match[1].trim();
         srcModule = match[2] || match[3];
-        importWriter = pipeImport;
+        importWriter = match[2] ? pipeImportFromDQ : pipeImportFromSQ;
+    } else if (match[6] || match[7]) {
+        // import(xxx)
+        srcModule = match[6] || match[7];
+        importWriter = match[6] ? pipeImportDQ : pipeImportSQ;
     } else {
         return undefined;
     }
