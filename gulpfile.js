@@ -1,4 +1,4 @@
-const { dest, parallel, series, task } = require('gulp');
+const { dest, parallel, series, src, task } = require('gulp');
 const ts = require('gulp-typescript');
 const filter = require('gulp-filter');
 const rimraf = require('rimraf');
@@ -42,4 +42,22 @@ task('package_json', function (cb) {
     });
 });
 
-exports.default = series('recreate_dist', parallel('tsc', 'package_json'));
+task('copy_license', function () {
+    return src('LICENSE').pipe(dest('./dist'));
+});
+
+task('copy_readme', function () {
+    return src('README.md').pipe(dest('./dist'));
+});
+
+exports.default = series(
+    'recreate_dist',
+    parallel(
+        'tsc',
+        'package_json',
+    ),
+    parallel(
+        'copy_license',
+        'copy_readme',
+    ),
+);
