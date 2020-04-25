@@ -30,7 +30,7 @@ src('./src/**/*.js')
             'some-module-name': 'another-module-name',
             'foo', {
                 path: './some/nested/file/bar.js',
-                relative: true,
+                relativeTo: './dist',
             },
         },
     })

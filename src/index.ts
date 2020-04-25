@@ -8,7 +8,7 @@ const PLUGIN_NAME = 'gulp-rewrite-imports';
 
 type TargetPath = string | {
     path: string;
-    relative?: boolean;
+    relativeTo?: string;
 };
 
 interface Options {
@@ -49,11 +49,11 @@ function pipeImportFromDQ(module: string, imports: string | undefined) {
     return `import ${imports} from "${module}";`;
 }
 
-function resolveRelativePath(inPath: string, relative: boolean, file: VinylFile): string {
-    if (!relative) {
+function resolveRelativePath(inPath: string, relativeTo: string | undefined): string {
+    if (!relativeTo) {
         return inPath;
     }
-    const absoluteFilePath = path.join(file.base, file.relative);
+    const absoluteFilePath = path.resolve(relativeTo);
     const absoluteTargetPath = path.resolve(inPath);
     return path.relative(absoluteFilePath, absoluteTargetPath).replace(/\\/g, '/');
 }
@@ -103,7 +103,7 @@ function rewriteRegexMatch(options: Options, file: VinylFile, match: any[]): str
     }
 
     if (typeof destModule === "object") {
-        destModule = resolveRelativePath(destModule.path, !!destModule.relative, file);
+        destModule = resolveRelativePath(destModule.path, destModule.relativeTo);
     }
 
     return importWriter(destModule, imports);
