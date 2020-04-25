@@ -14,6 +14,9 @@ type TargetPath = string | {
 interface Options {
     mappings: { [module: string]: TargetPath };
     experimentalEnableStreams?: boolean;
+    noImportFrom?: boolean;
+    noImport?: boolean;
+    noRequire?: boolean;
 }
 
 type ImportWriter = (module: string, imports?: string) => string;
@@ -77,16 +80,16 @@ function rewriteRegexMatch(options: Options, file: VinylFile, match: any[]): str
     let srcModule!: string;
     let imports: string | undefined;
 
-    if (match[4] || match[5]) {
+    if ((match[4] || match[5]) && !options.noRequire) {
         // require(xxx)
         srcModule = match[4] || match[5];
         importWriter = match[4] ? pipeRequireDQ : pipeRequireSQ;
-    } else if (match[2] || match[3]) {
+    } else if ((match[2] || match[3]) && !options.noImportFrom) {
         // import xxx from yyy
         imports = match[1].trim();
         srcModule = match[2] || match[3];
         importWriter = match[2] ? pipeImportFromDQ : pipeImportFromSQ;
-    } else if (match[6] || match[7]) {
+    } else if ((match[6] || match[7]) && !options.noImport) {
         // import(xxx)
         srcModule = match[6] || match[7];
         importWriter = match[6] ? pipeImportDQ : pipeImportSQ;
