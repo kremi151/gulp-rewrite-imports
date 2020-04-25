@@ -49,13 +49,16 @@ function pipeImportFromDQ(module: string, imports: string | undefined) {
     return `import ${imports} from "${module}";`;
 }
 
-function resolveRelativePath(inPath: string, relativeTo: string | undefined): string {
+function resolveRelativePath(inPath: string, relativeTo: string | undefined, file: VinylFile): string {
     if (!relativeTo) {
         return inPath;
     }
-    const absoluteFilePath = path.resolve(relativeTo);
+    let srcFileFolderPath = path.resolve(relativeTo, file.relative);
+    if (!file.isDirectory()) {
+        srcFileFolderPath = path.dirname(srcFileFolderPath);
+    }
     const absoluteTargetPath = path.resolve(inPath);
-    return path.relative(absoluteFilePath, absoluteTargetPath).replace(/\\/g, '/');
+    return path.relative(srcFileFolderPath, absoluteTargetPath).replace(/\\/g, '/');
 }
 
 function handleStream(options: Options, file: VinylFile, stream: NodeJS.ReadableStream, cb: TransformCallback) {
@@ -103,7 +106,7 @@ function rewriteRegexMatch(options: Options, file: VinylFile, match: any[]): str
     }
 
     if (typeof destModule === "object") {
-        destModule = resolveRelativePath(destModule.path, destModule.relativeTo);
+        destModule = resolveRelativePath(destModule.path, destModule.relativeTo, file);
     }
 
     return importWriter(destModule, imports);
