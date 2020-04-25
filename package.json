@@ -1,8 +1,12 @@
 {
   "name": "gulp-rewrite-imports",
   "author": "kremi151",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/kremi151/gulp-rewrite-imports.git"
+  },
   "scripts": {
     "build": "gulp",
     "test": "mocha -r ts-node/register 'src/*.spec.ts'"
