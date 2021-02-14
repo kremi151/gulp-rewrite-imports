@@ -17,12 +17,13 @@ interface Options {
     noImportFrom?: boolean;
     noImport?: boolean;
     noRequire?: boolean;
+    noExportFrom?: boolean;
 }
 
 type ImportWriter = (module: string, imports?: string) => string;
 
 function createRegex() {
-    return /(?:import(.*?)from ?(?:(?:"([^"]+)")|(?:'([^']+)'));?)|(?:require\((?:(?:"([^"]+)")|(?:'([^']+)'))\))|(?:import\((?:(?:"([^"]+)")|(?:'([^']+)'))\))/g;
+    return /(?:import(.*?)from ?(?:(?:"([^"]+)")|(?:'([^']+)'));?)|(?:export(.*?)from ?(?:(?:"([^"]+)")|(?:'([^']+)'));?)|(?:require\((?:(?:"([^"]+)")|(?:'([^']+)'))\))|(?:import\((?:(?:"([^"]+)")|(?:'([^']+)'))\))/g;
 }
 
 function pipeRequireSQ(module: string): string {
@@ -47,6 +48,14 @@ function pipeImportFromSQ(module: string, imports: string | undefined) {
 
 function pipeImportFromDQ(module: string, imports: string | undefined) {
     return `import ${imports} from "${module}";`;
+}
+
+function pipeExportFromSQ(module: string, exports: string | undefined) {
+    return `export ${exports} from '${module}';`
+}
+
+function pipeExportFromDQ(module: string, exports: string | undefined) {
+    return `export ${exports} from "${module}";`
 }
 
 function resolveRelativePath(inPath: string, relativeTo: string | undefined, file: VinylFile): string {
@@ -83,19 +92,24 @@ function rewriteRegexMatch(options: Options, file: VinylFile, match: any[]): str
     let srcModule!: string;
     let imports: string | undefined;
 
-    if ((match[4] || match[5]) && !options.noRequire) {
+    if ((match[7] || match[8]) && !options.noRequire) {
         // require(xxx)
-        srcModule = match[4] || match[5];
-        importWriter = match[4] ? pipeRequireDQ : pipeRequireSQ;
+        srcModule = match[7] || match[8];
+        importWriter = match[7] ? pipeRequireDQ : pipeRequireSQ;
     } else if ((match[2] || match[3]) && !options.noImportFrom) {
         // import xxx from yyy
         imports = match[1].trim();
         srcModule = match[2] || match[3];
         importWriter = match[2] ? pipeImportFromDQ : pipeImportFromSQ;
-    } else if ((match[6] || match[7]) && !options.noImport) {
+    } else if ((match[5] || match[6]) && !options.noExportFrom) {
+        // export xxx from yyy
+        imports = match[4].trim();
+        srcModule = match[5] || match[6];
+        importWriter = match[5] ? pipeExportFromDQ : pipeExportFromSQ;
+    } else if ((match[9] || match[20]) && !options.noImport) {
         // import(xxx)
-        srcModule = match[6] || match[7];
-        importWriter = match[6] ? pipeImportDQ : pipeImportSQ;
+        srcModule = match[9] || match[10];
+        importWriter = match[9] ? pipeImportDQ : pipeImportSQ;
     } else {
         return undefined;
     }
