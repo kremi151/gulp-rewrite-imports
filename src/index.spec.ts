@@ -47,6 +47,28 @@ const instance = new Something();
 `);
     });
 
+    it('should replace rewrite re-exports', async () => {
+        const fakeFile = new VinylFile({
+            contents: new Buffer(`export { Something } from 'nowhere';
+const instance = new Something();
+`),
+        });
+        const transform = rewriter({
+            mappings: {
+                'nowhere': 'somewhere',
+            },
+        });
+
+        transform.write(fakeFile);
+
+        const file = await waitForTransform(transform);
+
+        expect(file.isBuffer()).to.be.true;
+        expect((file.contents as Buffer).toString('utf8')).to.equal(`export { Something } from 'somewhere';
+const instance = new Something();
+`);
+    });
+
     it('should not support streams by default', async () => {
         const fakeFile = new VinylFile({
             contents: new MemoryStreams.ReadableStream(`does not matter`),
