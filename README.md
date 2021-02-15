@@ -1,5 +1,7 @@
 # gulp-rewrite-imports
 
+![NPM](https://img.shields.io/npm/v/gulp-rewrite-imports?color=green)
+
 A gulp plugin which allows to rewrite `import` and `require` statements in JavaScript and TypeScript files.
 
 ## Install
